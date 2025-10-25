@@ -10,3 +10,5 @@ colorama
 schedule
 urllib3
 python-telegram-bot
+fastapi
+hypercorn
