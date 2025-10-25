@@ -321,7 +321,7 @@ async def send_like_request(enc_uid, token_info):
         'Expect': "100-continue",
         'X-Unity-Version': "2018.4.11f1",
         'X-GA': "v1 1",
-        'ReleaseVersion": "OB50"
+        'ReleaseVersion': "OB50"  # تم تصحيح الخطأ هنا
     }
     try:
         async with aiohttp.ClientSession() as session:
