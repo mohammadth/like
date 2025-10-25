@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 import requests
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
@@ -36,16 +35,7 @@ init(autoreset=True)
 # تهيئة تطبيق FastAPI
 app = FastAPI()
 
-# تكوين CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# تخزين البيانات في الذاكرة بدلاً من الكاش
+# تخزين البيانات في الذاكرة
 responses_cache = []
 
 # ✅ الحسابات مخزنة مباشرة في الكود
@@ -2894,7 +2884,7 @@ async def get_responses():
 
 
 @app.get('/like')
-async def like_handler(uid: str = None):
+async def like_handler(uid: str):
     if not uid:
         return JSONResponse(content={"error": "Missing UID"}, status_code=400)
 
@@ -2956,10 +2946,9 @@ async def like_handler(uid: str = None):
 async def refresh_tokens():
     try:
         fetch_tokens()
-        tokens = responses_cache
         return JSONResponse(content={
             "message": "Tokens refreshed successfully",
-            "total_tokens": len(tokens)
+            "total_tokens": len(responses_cache)
         })
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
@@ -2967,11 +2956,10 @@ async def refresh_tokens():
 
 @app.get('/')
 async def home():
-    tokens = responses_cache
     return JSONResponse(content={
         "status": "online",
         "message": "Like API is running ✅",
-        "cached_tokens": len(tokens),
+        "cached_tokens": len(responses_cache),
         "embedded_accounts": len(ACCOUNTS),
         "endpoints": {
             "/like?uid=UID": "Send likes to player",
@@ -2987,20 +2975,17 @@ def run_scheduler():
         time.sleep(1)
 
 
+# تشغيل fetch_tokens فورًا عند بدء التشغيل
+fetch_tokens()
+
+# جدولة المهمة كل 7 ساعات
+schedule.every(7).hours.do(fetch_tokens)
+
+# تشغيل السكيدولر في ثانوية منفصلة
+scheduler_thread = threading.Thread(target=run_scheduler)
+scheduler_thread.daemon = True
+scheduler_thread.start()
+
 if __name__ == "__main__":
     import uvicorn
-    
-    # جدولة المهمة كل 7 ساعات
-    schedule.every(7).hours.do(fetch_tokens)
-
-    # تشغيل fetch_tokens فورًا عند بدء التشغيل
-    fetch_tokens()
-
-    # تشغيل السكيدولر في ثانوية منفصلة
-    scheduler_thread = threading.Thread(target=run_scheduler)
-    scheduler_thread.daemon = True
-    scheduler_thread.start()
-
-    # تشغيل تطبيق FastAPI
     uvicorn.run(app, host="0.0.0.0", port=5000)
-
