@@ -1,3 +1,7 @@
+from fastapi import FastAPI, HTTPException
+import logging
+from telegram import Update
+from telegram.ext import Application, CommandHandler, CallbackContext
 from flask import Flask, jsonify, request
 from flask_caching import Cache
 import requests
@@ -21,6 +25,10 @@ from google.protobuf.json_format import MessageToJson
 import like_pb2, like_count_pb2, uid_generator_pb2
 from google.protobuf.message import DecodeError
 import urllib3
+import os
+import datetime
+from datetime import timedelta
+import uvicorn
 
 # تجاهل تحذيرات SSL
 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
@@ -32,7 +40,10 @@ AES_IV = b'6oyZDr22E3ychjM%'
 # تهيئة colorama
 init(autoreset=True)
 
-# تهيئة تطبيق Flask
+# ✅ إنشاء تطبيق FastAPI
+fastapi_app = FastAPI(title="Free Fire Likes API", description="API for Free Fire Likes Bot")
+
+# تهيئة تطبيق Flask (محفوظ كما هو)
 app = Flask(__name__)
 
 # تكوين Flask-Caching
@@ -43,465 +54,16 @@ ACCOUNTS = [
     {
         "uid": "4238482847",
         "password": "BY_PARAHEX-RCTN0RQ6G-REDZED"
-    },
-    {
-        "uid": "4238483641",
-        "password": "BY_PARAHEX-OQ9OPWFYV-REDZED"
-    },
-    {
-        "uid": "4238483930",
-        "password": "BY_PARAHEX-ZDG5RAWIR-REDZED"
-    },
-    {
-        "uid": "4238484353",
-        "password": "BY_PARAHEX-9GU9UIE73-REDZED"
-    },
-    {
-        "uid": "4238484937",
-        "password": "BY_PARAHEX-JH7FIUHZ5-REDZED"
-    },
-    {
-        "uid": "4238485421",
-        "password": "BY_PARAHEX-PS7OSYGGA-REDZED"
-    },
-    {
-        "uid": "4238486594",
-        "password": "BY_PARAHEX-GFDCVWE2E-REDZED"
-    },
-    {
-        "uid": "4238487850",
-        "password": "BY_PARAHEX-LV7DZJC8B-REDZED"
-    },
-    {
-        "uid": "4238488258",
-        "password": "BY_PARAHEX-WM4LU305T-REDZED"
-    },
-    {
-        "uid": "4238488913",
-        "password": "BY_PARAHEX-R00SAMFHW-REDZED"
-    },
-    {
-        "uid": "4238489569",
-        "password": "BY_PARAHEX-BXGJCV8UT-REDZED"
-    },
-    {
-        "uid": "4238490146",
-        "password": "BY_PARAHEX-DFHJRTF8C-REDZED"
-    },
-    {
-        "uid": "4238490678",
-        "password": "BY_PARAHEX-FECEORP5R-REDZED"
-    },
-    {
-        "uid": "4238491318",
-        "password": "BY_PARAHEX-5DSCHF4NP-REDZED"
-    },
-    {
-        "uid": "4238491969",
-        "password": "BY_PARAHEX-41JV5JMFC-REDZED"
-    },
-    {
-        "uid": "4238492514",
-        "password": "BY_PARAHEX-W67ZMEE6U-REDZED"
-    },
-    {
-        "uid": "4238493184",
-        "password": "BY_PARAHEX-PXMQ5TBNC-REDZED"
-    },
-    {
-        "uid": "4238493653",
-        "password": "BY_PARAHEX-R7UZJXDGO-REDZED"
-    },
-    {
-        "uid": "4238494245",
-        "password": "BY_PARAHEX-HHAFWMXP3-REDZED"
-    },
-    {
-        "uid": "4238494827",
-        "password": "BY_PARAHEX-Y7KVTZ5RT-REDZED"
-    },
-    {
-        "uid": "4238495427",
-        "password": "BY_PARAHEX-6YAYM6ULU-REDZED"
-    },
-    {
-        "uid": "4238495867",
-        "password": "BY_PARAHEX-NJSP40UGZ-REDZED"
-    },
-    {
-        "uid": "4238496398",
-        "password": "BY_PARAHEX-KK7CPDGLT-REDZED"
-    },
-    {
-        "uid": "4238497001",
-        "password": "BY_PARAHEX-8QO0IS2KN-REDZED"
-    },
-    {
-        "uid": "4238497630",
-        "password": "BY_PARAHEX-PLYUTIN7S-REDZED"
-    },
-    {
-        "uid": "4238498243",
-        "password": "BY_PARAHEX-ALEWMHXVG-REDZED"
-    },
-    {
-        "uid": "4238498684",
-        "password": "BY_PARAHEX-DN0WIAVVU-REDZED"
-    },
-    {
-        "uid": "4238499310",
-        "password": "BY_PARAHEX-NQQZM2QKD-REDZED"
-    },
-    {
-        "uid": "4238499839",
-        "password": "BY_PARAHEX-AUES26TUK-REDZED"
-    },
-    {
-        "uid": "4238500354",
-        "password": "BY_PARAHEX-8XVQQUU5X-REDZED"
-    },
-    {
-        "uid": "4238500872",
-        "password": "BY_PARAHEX-MFKAHHBGL-REDZED"
-    },
-    {
-        "uid": "4238501366",
-        "password": "BY_PARAHEX-P5ECLO087-REDZED"
-    },
-    {
-        "uid": "4238502287",
-        "password": "BY_PARAHEX-KDJ9V0ZHC-REDZED"
-    },
-    {
-        "uid": "4238502700",
-        "password": "BY_PARAHEX-YNWAVYIML-REDZED"
-    },
-    {
-        "uid": "4238503351",
-        "password": "BY_PARAHEX-DFJ3UKDKD-REDZED"
-    },
-    {
-        "uid": "4238503965",
-        "password": "BY_PARAHEX-3NTBFMCPO-REDZED"
-    },
-    {
-        "uid": "4238504468",
-        "password": "BY_PARAHEX-PBUBZF9KV-REDZED"
-    },
-    {
-        "uid": "4238505408",
-        "password": "BY_PARAHEX-5YZSBUD5V-REDZED"
-    },
-    {
-        "uid": "4238506061",
-        "password": "BY_PARAHEX-NE7HPRZJY-REDZED"
-    },
-    {
-        "uid": "4238507104",
-        "password": "BY_PARAHEX-VMUID1IOL-REDZED"
-    },
-    {
-        "uid": "4238507485",
-        "password": "BY_PARAHEX-AQEXCSFCV-REDZED"
-    },
-    {
-        "uid": "4238507854",
-        "password": "BY_PARAHEX-JF4CTEXV7-REDZED"
-    },
-    {
-        "uid": "4238508378",
-        "password": "BY_PARAHEX-7H8IX0ISP-REDZED"
-    },
-    {
-        "uid": "4238509230",
-        "password": "BY_PARAHEX-EZN9RFLJS-REDZED"
-    },
-    {
-        "uid": "4238509632",
-        "password": "BY_PARAHEX-RCEOFUDJK-REDZED"
-    },
-    {
-        "uid": "4238510706",
-        "password": "BY_PARAHEX-7SYKHLEBJ-REDZED"
-    },
-    {
-        "uid": "4238511102",
-        "password": "BY_PARAHEX-JZZ44ZTXH-REDZED"
-    },
-    {
-        "uid": "4238511876",
-        "password": "BY_PARAHEX-VZVOVJG63-REDZED"
-    },
-    {
-        "uid": "4238512340",
-        "password": "BY_PARAHEX-TGFANPWST-REDZED"
-    },
-    {
-        "uid": "4238512899",
-        "password": "BY_PARAHEX-Z99QSJYRJ-REDZED"
-    },
-    {
-        "uid": "4238513158",
-        "password": "BY_PARAHEX-56ABQONU3-REDZED"
-    },
-    {
-        "uid": "4238513754",
-        "password": "BY_PARAHEX-IKP9FG3YZ-REDZED"
-    },
-    {
-        "uid": "4238514292",
-        "password": "BY_PARAHEX-LKZYNPRPK-REDZED"
-    },
-    {
-        "uid": "4238514880",
-        "password": "BY_PARAHEX-7PCRCA1KI-REDZED"
-    },
-    {
-        "uid": "4238515552",
-        "password": "BY_PARAHEX-AJMRU2KAU-REDZED"
-    },
-    {
-        "uid": "4238515816",
-        "password": "BY_PARAHEX-RGS7MM5R8-REDZED"
-    },
-    {
-        "uid": "4238516592",
-        "password": "BY_PARAHEX-ZNVDOB1CA-REDZED"
-    },
-    {
-        "uid": "4238517090",
-        "password": "BY_PARAHEX-Z73K3WSRY-REDZED"
-    },
-    {
-        "uid": "4238517588",
-        "password": "BY_PARAHEX-RFSJHAOCB-REDZED"
-    },
-    {
-        "uid": "4238518085",
-        "password": "BY_PARAHEX-EALVJNY8W-REDZED"
-    },
-    {
-        "uid": "4238518695",
-        "password": "BY_PARAHEX-5HWUUQ0BR-REDZED"
-    },
-    {
-        "uid": "4238519121",
-        "password": "BY_PARAHEX-UKXDBY2QN-REDZED"
-    },
-    {
-        "uid": "4238519799",
-        "password": "BY_PARAHEX-AGXRLILDS-REDZED"
-    },
-    {
-        "uid": "4238520162",
-        "password": "BY_PARAHEX-969HXKOLO-REDZED"
-    },
-    {
-        "uid": "4238521031",
-        "password": "BY_PARAHEX-RDYAJSYXZ-REDZED"
-    },
-    {
-        "uid": "4238521597",
-        "password": "BY_PARAHEX-HA0FJUGFX-REDZED"
-    },
-    {
-        "uid": "4238522353",
-        "password": "BY_PARAHEX-VLSLAYJK0-REDZED"
-    },
-    {
-        "uid": "4238522929",
-        "password": "BY_PARAHEX-JVWVIRYS4-REDZED"
-    },
-    {
-        "uid": "4238523207",
-        "password": "BY_PARAHEX-BIQYNPYI7-REDZED"
-    },
-    {
-        "uid": "4238523536",
-        "password": "BY_PARAHEX-X9AEZO0FX-REDZED"
-    },
-    {
-        "uid": "4238524036",
-        "password": "BY_PARAHEX-5EBTVYPIK-REDZED"
-    },
-    {
-        "uid": "4238524347",
-        "password": "BY_PARAHEX-H9XA5ZC8M-REDZED"
-    },
-    {
-        "uid": "4238524780",
-        "password": "BY_PARAHEX-RI6NTPKX9-REDZED"
-    },
-    {
-        "uid": "4238525287",
-        "password": "BY_PARAHEX-3IX1ASH2O-REDZED"
-    },
-    {
-        "uid": "4238525858",
-        "password": "BY_PARAHEX-DABQNDQDZ-REDZED"
-    },
-    {
-        "uid": "4238526194",
-        "password": "BY_PARAHEX-WQCBNKANQ-REDZED"
-    },
-    {
-        "uid": "4238526522",
-        "password": "BY_PARAHEX-AGNNPWOCA-REDZED"
-    },
-    {
-        "uid": "4238526911",
-        "password": "BY_PARAHEX-SXRJJMTCQ-REDZED"
-    },
-    {
-        "uid": "4238527541",
-        "password": "BY_PARAHEX-OOK3XQLPP-REDZED"
-    },
-    {
-        "uid": "4238528065",
-        "password": "BY_PARAHEX-Q6B2SDGMH-REDZED"
-    },
-    {
-        "uid": "4238528377",
-        "password": "BY_PARAHEX-EFY30GMVZ-REDZED"
-    },
-    {
-        "uid": "4238528931",
-        "password": "BY_PARAHEX-SJRV7E778-REDZED"
-    },
-    {
-        "uid": "4238529421",
-        "password": "BY_PARAHEX-ARBRXMRK8-REDZED"
-    },
-    {
-        "uid": "4238529883",
-        "password": "BY_PARAHEX-JHMPO1YKW-REDZED"
-    },
-    {
-        "uid": "4238530356",
-        "password": "BY_PARAHEX-O8875VCMY-REDZED"
-    },
-    {
-        "uid": "4238530940",
-        "password": "BY_PARAHEX-ESVRTU3SL-REDZED"
-    },
-    {
-        "uid": "4238531522",
-        "password": "BY_PARAHEX-OWK05EU35-REDZED"
-    },
-    {
-        "uid": "4238532200",
-        "password": "BY_PARAHEX-XLEQY6ZM4-REDZED"
-    },
-    {
-        "uid": "4238533234",
-        "password": "BY_PARAHEX-1ABHZO59N-REDZED"
-    },
-    {
-        "uid": "4238533822",
-        "password": "BY_PARAHEX-SHHL980X4-REDZED"
-    },
-    {
-        "uid": "4238534333",
-        "password": "BY_PARAHEX-DO5BQG0ST-REDZED"
-    },
-    {
-        "uid": "4238534939",
-        "password": "BY_PARAHEX-KPLFHUPB7-REDZED"
-    },
-    {
-        "uid": "4238535543",
-        "password": "BY_PARAHEX-JIQPHM7LV-REDZED"
-    },
-    {
-        "uid": "4238536282",
-        "password": "BY_PARAHEX-GFVVL2QO1-REDZED"
-    },
-    {
-        "uid": "4238536913",
-        "password": "BY_PARAHEX-ZMJULIMOC-REDZED"
-    },
-    {
-        "uid": "4238537410",
-        "password": "BY_PARAHEX-74DCFWNZP-REDZED"
-    },
-    {
-        "uid": "4238537860",
-        "password": "BY_PARAHEX-1AC0TTHJW-REDZED"
-    },
-    {
-        "uid": "4238538902",
-        "password": "BY_PARAHEX-DQQDNQCSW-REDZED"
-    },
-    {
-        "uid": "4238539393",
-        "password": "BY_PARAHEX-NPGGDOJ7L-REDZED"
-    },
-    {
-        "uid": "4238539726",
-        "password": "BY_PARAHEX-PRGPQYODS-REDZED"
-    },
-    {
-        "uid": "4238540363",
-        "password": "BY_PARAHEX-0NGWEXBCR-REDZED"
-    },
-    {
-        "uid": "4238540973",
-        "password": "BY_PARAHEX-F3PTMOI2W-REDZED"
-    },
-    {
-        "uid": "4238541992",
-        "password": "BY_PARAHEX-LRGGDFC3M-REDZED"
-    },
-    {
-        "uid": "4238542462",
-        "password": "BY_PARAHEX-YM3NWGGIL-REDZED"
-    },
-    {
-        "uid": "4238542943",
-        "password": "BY_PARAHEX-T5TLCWPT5-REDZED"
-    },
-    {
-        "uid": "4238543641",
-        "password": "BY_PARAHEX-3AJXAAE7H-REDZED"
-    },
-    {
-        "uid": "4238544469",
-        "password": "BY_PARAHEX-VUY2N0ENS-REDZED"
-    },
-    {
-        "uid": "4238544837",
-        "password": "BY_PARAHEX-SZAAUBUET-REDZED"
-    },
-    {
-        "uid": "4238545225",
-        "password": "BY_PARAHEX-XPJW0BYKY-REDZED"
-    },
-    {
-        "uid": "4238545755",
-        "password": "BY_PARAHEX-YHXTIPJ5O-REDZED"
-    },
-    {
-        "uid": "4238546094",
-        "password": "BY_PARAHEX-K7DAWRXXR-REDZED"
-    },
-    {
-        "uid": "4238546700",
-        "password": "BY_PARAHEX-IYHTWWBI6-REDZED"
-    },
-    {
-        "uid": "4238547052",
-        "password": "BY_PARAHEX-TL8RQ9X0R-REDZED"
-    },
-    {
-        "uid": "4238547385",
-        "password": "BY_PARAHEX-9B5CB5EL6-REDZED"
-    },
-    {
-        "uid": "4238547738",
-        "password": "BY_PARAHEX-Y0T28RF9D-REDZED"
     }
 ]
 
+# إعدادات تيليجرام
+TELEGRAM_BOT_TOKEN = "8097054676:AAFINJ5mtnA0KCeoT8u2y2wSNLNlvuvIxcE"
+
+# ملفات التخزين
+ACCOUNTS_FILE = "accounts.json"
+LIKED_IDS_FILE = "liked_ids.json"
+AUTO_LIKE_IDS_FILE = "auto_like_ids.json"
 
 # ✅ دالة تحميل الحسابات من المتغير الثابت
 def load_accounts():
@@ -759,7 +321,7 @@ async def send_like_request(enc_uid, token_info):
         'Expect': "100-continue",
         'X-Unity-Version': "2018.4.11f1",
         'X-GA': "v1 1",
-        'ReleaseVersion': "OB50"
+        'ReleaseVersion": "OB50"
     }
     try:
         async with aiohttp.ClientSession() as session:
@@ -790,6 +352,533 @@ async def send_likes(uid, tokens):
     tasks = [send_like_request(enc_uid, token_info) for token_info in tokens]
     return await asyncio.gather(*tasks)
 
+
+# ========== الملفات الجديدة ==========
+
+def load_json_file(filename, default=[]):
+    """تحميل ملف JSON"""
+    try:
+        if os.path.exists(filename):
+            with open(filename, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Error loading {filename}: {e}")
+    return default
+
+def save_json_file(filename, data):
+    """حفظ بيانات إلى ملف JSON"""
+    try:
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"Error saving {filename}: {e}")
+        return False
+
+def update_accounts_from_file():
+    """تحديث الحسابات من الملف"""
+    global ACCOUNTS
+    try:
+        if os.path.exists(ACCOUNTS_FILE):
+            with open(ACCOUNTS_FILE, 'r', encoding='utf-8') as f:
+                new_accounts = json.load(f)
+                if isinstance(new_accounts, list) and len(new_accounts) > 0:
+                    ACCOUNTS = new_accounts
+                    print(f"✅ تم تحديث الحسابات من الملف، العدد: {len(ACCOUNTS)}")
+                    return True
+    except Exception as e:
+        print(f"❌ خطأ في تحديث الحسابات: {e}")
+    return False
+
+def can_send_likes(uid):
+    """التحقق إذا كان يمكن إرسال لايكات للـUID"""
+    liked_ids = load_json_file(LIKED_IDS_FILE, {})
+    
+    if uid not in liked_ids:
+        return True, "يمكن إرسال لايكات الآن"
+    
+    last_like_time = datetime.datetime.fromisoformat(liked_ids[uid])
+    next_like_time = last_like_time + timedelta(hours=24)
+    now = datetime.datetime.now()
+    
+    if now >= next_like_time:
+        return True, "يمكن إرسال لايكات الآن"
+    else:
+        remaining = next_like_time - now
+        hours = int(remaining.total_seconds() // 3600)
+        minutes = int((remaining.total_seconds() % 3600) // 60)
+        return False, f"⏳ يجب الانتظار {hours} ساعة و {minutes} دقيقة"
+
+def record_like_sent(uid):
+    """تسجيل وقت إرسال اللايكات"""
+    liked_ids = load_json_file(LIKED_IDS_FILE, {})
+    liked_ids[uid] = datetime.datetime.now().isoformat()
+    save_json_file(LIKED_IDS_FILE, liked_ids)
+
+def add_auto_like_id(uid):
+    """إضافة ID لللايكات التلقائية"""
+    auto_like_ids = load_json_file(AUTO_LIKE_IDS_FILE, [])
+    if uid not in auto_like_ids:
+        auto_like_ids.append(uid)
+        save_json_file(AUTO_LIKE_IDS_FILE, auto_like_ids)
+        return True
+    return False
+
+def remove_auto_like_id(uid):
+    """إزالة ID من اللايكات التلقائية"""
+    auto_like_ids = load_json_file(AUTO_LIKE_IDS_FILE, [])
+    if uid in auto_like_ids:
+        auto_like_ids.remove(uid)
+        save_json_file(AUTO_LIKE_IDS_FILE, auto_like_ids)
+        return True
+    return False
+
+def send_auto_likes():
+    """إرسال اللايكات التلقائية"""
+    auto_like_ids = load_json_file(AUTO_LIKE_IDS_FILE, [])
+    if not auto_like_ids:
+        return
+    
+    tokens = cache.get('responses') or []
+    if not tokens:
+        print("❌ لا توجد توكنات متاحة لللايكات التلقائية")
+        return
+    
+    print(f"🔄 إرسال لايكات تلقائية لـ {len(auto_like_ids)} ID")
+    
+    for uid in auto_like_ids:
+        try:
+            can_send, message = can_send_likes(uid)
+            if can_send:
+                print(f"✅ إرسال لايكات تلقائية لـ {uid}")
+                responses = asyncio.run(send_likes(uid, tokens))
+                success_count = sum(1 for r in responses if r.get("success"))
+                record_like_sent(uid)
+                print(f"✅ تم إرسال {success_count} لايك لـ {uid}")
+            else:
+                print(f"⏳ لم يحن وقت الإرسال لـ {uid}: {message}")
+        except Exception as e:
+            print(f"❌ خطأ في الإرسال التلقائي لـ {uid}: {e}")
+
+# ========== وظائف تيليجرام ==========
+
+async def start(update: Update, context: CallbackContext) -> None:
+    """إرسال رسالة ترحيبية عند استخدام الأمر /start"""
+    welcome_text = """
+🎮 **مرحباً بك في بوت Free Fire Likes!**
+
+📋 **الأوامر المتاحة:**
+/start - عرض هذه الرسالة
+/like <UID> - إرسال لايكات للاعب
+/lik <UID> - إرسال لايكات (تخطي وقت الانتظار)
+/like24 <UID> - إضافة ID لللايكات التلقائية كل 24 ساعة
+/upload - رفع ملف حسابات جديد
+/tokens - عرض عدد التوكنات المخزنة
+/refresh - تحديث التوكنات
+/status - حالة البوت
+/mylikes - عرض الـ IDs المضافة لللايكات التلقائية
+/remove <UID> - إزالة ID من اللايكات التلقائية
+
+⚡ **مثال:** 
+`/like 1234567890`
+`/like24 10405791946`
+    """
+    await update.message.reply_text(welcome_text, parse_mode='Markdown')
+
+async def like_command(update: Update, context: CallbackContext) -> None:
+    """معالجة أمر الإعجاب مع التحقق من الوقت"""
+    if not context.args:
+        await update.message.reply_text("❌ يرجى تقديم UID\nمثال: `/like 1234567890`", parse_mode='Markdown')
+        return
+
+    uid = context.args[0]
+    
+    # التحقق من صحة UID
+    if not uid.isdigit():
+        await update.message.reply_text("❌ UID غير صالح. يجب أن يحتوي على أرقام فقط.")
+        return
+
+    # التحقق من الوقت
+    can_send, message = can_send_likes(uid)
+    if not can_send:
+        await update.message.reply_text(f"❌ {message}\n\nاستخدم `/lik {uid}` لتخطي وقت الانتظار", parse_mode='Markdown')
+        return
+
+    await update.message.reply_text(f"⏳ جاري إرسال لايكات للاعب {uid}...")
+
+    try:
+        tokens = cache.get('responses')
+        if not tokens:
+            await update.message.reply_text("❌ لا توجد توكنات متاحة. يرجى استخدام /refresh لتحديث التوكنات أولاً.")
+            return
+
+        enc_uid = encrypt_message_like(create_uid_proto(uid))
+        before = make_like_request(enc_uid, tokens[0]["token"])
+        if not before:
+            await update.message.reply_text("❌ فشل في الحصول على معلومات اللاعب.")
+            return
+
+        before_data = json.loads(MessageToJson(before))
+        likes_before = int(before_data.get("AccountInfo", {}).get("Likes", 0))
+        nickname = before_data.get("AccountInfo", {}).get("PlayerNickname", "Unknown")
+        player_level = before_data.get("AccountInfo", {}).get("Level", 0)
+        region = before_data.get("AccountInfo", {}).get("region", "Unknown")
+
+        # إرسال رسالة التقدم
+        progress_msg = await update.message.reply_text(
+            f"📊 **معلومات اللاعب:**\n"
+            f"👤 الاسم: {nickname}\n"
+            f"🆔 UID: {uid}\n"
+            f"🌍 المنطقة: {region}\n"
+            f"⭐ المستوى: {player_level}\n"
+            f"❤️ اللايكات الحالية: {likes_before}\n"
+            f"🔄 جاري إرسال {len(tokens)} لايك..."
+        )
+
+        # إرسال اللايكات
+        responses = await send_likes(uid, tokens)
+        success_count = sum(1 for r in responses if r.get("success"))
+
+        # الحصول على عدد اللايكات الجديد
+        after = make_like_request(enc_uid, tokens[0]["token"])
+        likes_after = likes_before
+        if after:
+            after_data = json.loads(MessageToJson(after))
+            likes_after = int(after_data.get("AccountInfo", {}).get("Likes", 0))
+
+        actual_likes_added = likes_after - likes_before
+
+        # تسجيل وقت الإرسال
+        record_like_sent(uid)
+
+        # إرسال النتيجة النهائية
+        result_text = (
+            f"✅ **تم إرسال اللايكات بنجاح!**\n\n"
+            f"👤 **اللاعب:** {nickname}\n"
+            f"🆔 **UID:** {uid}\n"
+            f"❤️ **اللايكات قبل:** {likes_before}\n"
+            f"❤️ **اللايكات بعد:** {likes_after}\n"
+            f"📈 **تم إضافة:** {actual_likes_added} لايك\n"
+            f"✅ **الطلبات الناجحة:** {success_count}/{len(tokens)}\n"
+            f"⏰ **يمكنك الإرسال مرة أخرى بعد 24 ساعة**\n"
+            f"🏆 **الحالة:** {'نجاح' if actual_likes_added > 0 else 'لا توجد تغييرات'}"
+        )
+
+        await progress_msg.edit_text(result_text)
+
+    except Exception as e:
+        await update.message.reply_text(f"❌ حدث خطأ: {str(e)}")
+
+async def lik_command(update: Update, context: CallbackContext) -> None:
+    """إرسال لايكات مع تخطي وقت الانتظار"""
+    if not context.args:
+        await update.message.reply_text("❌ يرجى تقديم UID\nمثال: `/lik 1234567890`", parse_mode='Markdown')
+        return
+
+    uid = context.args[0]
+    
+    if not uid.isdigit():
+        await update.message.reply_text("❌ UID غير صالح. يجب أن يحتوي على أرقام فقط.")
+        return
+
+    await update.message.reply_text(f"⚡ **تخطي وقت الانتظار**\n⏳ جاري إرسال لايكات للاعب {uid}...")
+
+    try:
+        tokens = cache.get('responses')
+        if not tokens:
+            await update.message.reply_text("❌ لا توجد توكنات متاحة. يرجى استخدام /refresh لتحديث التوكنات أولاً.")
+            return
+
+        enc_uid = encrypt_message_like(create_uid_proto(uid))
+        before = make_like_request(enc_uid, tokens[0]["token"])
+        if not before:
+            await update.message.reply_text("❌ فشل في الحصول على معلومات اللاعب.")
+            return
+
+        before_data = json.loads(MessageToJson(before))
+        likes_before = int(before_data.get("AccountInfo", {}).get("Likes", 0))
+        nickname = before_data.get("AccountInfo", {}).get("PlayerNickname", "Unknown")
+        player_level = before_data.get("AccountInfo", {}).get("Level", 0)
+        region = before_data.get("AccountInfo", {}).get("region", "Unknown")
+
+        progress_msg = await update.message.reply_text(
+            f"📊 **معلومات اللاعب:**\n"
+            f"👤 الاسم: {nickname}\n"
+            f"🆔 UID: {uid}\n"
+            f"🌍 المنطقة: {region}\n"
+            f"⭐ المستوى: {player_level}\n"
+            f"❤️ اللايكات الحالية: {likes_before}\n"
+            f"🔄 جاري إرسال {len(tokens)} لايك..."
+        )
+
+        responses = await send_likes(uid, tokens)
+        success_count = sum(1 for r in responses if r.get("success"))
+
+        after = make_like_request(enc_uid, tokens[0]["token"])
+        likes_after = likes_before
+        if after:
+            after_data = json.loads(MessageToJson(after))
+            likes_after = int(after_data.get("AccountInfo", {}).get("Likes", 0))
+
+        actual_likes_added = likes_after - likes_before
+
+        # تسجيل وقت الإرسال (حتى مع التخطي)
+        record_like_sent(uid)
+
+        result_text = (
+            f"✅ **تم إرسال اللايكات بنجاح!** (تخطي انتظار)\n\n"
+            f"👤 **اللاعب:** {nickname}\n"
+            f"🆔 **UID:** {uid}\n"
+            f"❤️ **اللايكات قبل:** {likes_before}\n"
+            f"❤️ **اللايكات بعد:** {likes_after}\n"
+            f"📈 **تم إضافة:** {actual_likes_added} لايك\n"
+            f"✅ **الطلبات الناجحة:** {success_count}/{len(tokens)}\n"
+            f"🏆 **الحالة:** {'نجاح' if actual_likes_added > 0 else 'لا توجد تغييرات'}"
+        )
+
+        await progress_msg.edit_text(result_text)
+
+    except Exception as e:
+        await update.message.reply_text(f"❌ حدث خطأ: {str(e)}")
+
+async def like24_command(update: Update, context: CallbackContext) -> None:
+    """إضافة ID لللايكات التلقائية كل 24 ساعة"""
+    if not context.args:
+        await update.message.reply_text("❌ يرجى تقديم UID\nمثال: `/like24 10405791946`", parse_mode='Markdown')
+        return
+
+    uid = context.args[0]
+    
+    if not uid.isdigit():
+        await update.message.reply_text("❌ UID غير صالح. يجب أن يحتوي على أرقام فقط.")
+        return
+
+    if add_auto_like_id(uid):
+        await update.message.reply_text(
+            f"✅ **تم إضافة الـ ID لللايكات التلقائية!**\n\n"
+            f"🆔 **UID:** {uid}\n"
+            f"⏰ **سيتم إرسال اللايكات كل 24 ساعة تلقائياً**\n"
+            f"📋 **استخدم /mylikes لمشاهدة جميع الـ IDs**\n"
+            f"🗑️ **استخدم /remove {uid} لإزالة الـ ID**"
+        )
+    else:
+        await update.message.reply_text(f"❌ الـ ID {uid} مضاف مسبقاً لللايكات التلقائية")
+
+async def upload_command(update: Update, context: CallbackContext) -> None:
+    """رفع ملف حسابات جديد"""
+    await update.message.reply_text(
+        "📁 **لرفع ملف حسابات جديد:**\n\n"
+        "1. أرسل ملف JSON يحتوي على الحسابات\n"
+        "2. يجب أن يكون بنفس التنسيق:\n"
+        "```json\n"
+        "[\n"
+        "    {\n"
+        "        \"uid\": \"4238482847\",\n"
+        "        \"password\": \"BY_PARAHEX-RCTN0RQ6G-REDZED\"\n"
+        "    }\n"
+        "]\n"
+        "```\n"
+        "3. سيتم حذف الحسابات القديمة واستبدالها بالجديدة"
+    )
+
+async def handle_document(update: Update, context: CallbackContext) -> None:
+    """معالجة الملفات المرسلة"""
+    document = update.message.document
+    
+    if document.mime_type != "application/json":
+        await update.message.reply_text("❌ يرجى إرسال ملف JSON فقط")
+        return
+
+    file = await context.bot.get_file(document.file_id)
+    await file.download_to_drive(ACCOUNTS_FILE)
+    
+    if update_accounts_from_file():
+        await update.message.reply_text(
+            f"✅ **تم تحديث الحسابات بنجاح!**\n\n"
+            f"📊 **عدد الحسابات الجديدة:** {len(ACCOUNTS)}\n"
+            f"🔄 **جاري تحديث التوكنات...**"
+        )
+        # تحديث التوكنات تلقائياً
+        fetch_tokens()
+    else:
+        await update.message.reply_text("❌ فشل في تحديث الحسابات. تأكد من تنسيق الملف")
+
+async def tokens_command(update: Update, context: CallbackContext) -> None:
+    """عرض عدد التوكنات المتاحة"""
+    tokens = cache.get('responses') or []
+    await update.message.reply_text(f"🔑 **التوكنات المخزنة:** {len(tokens)} توكن")
+
+async def refresh_command(update: Update, context: CallbackContext) -> None:
+    """تحديث التوكنات"""
+    msg = await update.message.reply_text("🔄 جاري تحديث التوكنات...")
+    
+    try:
+        def refresh_tokens_sync():
+            fetch_tokens()
+            return cache.get('responses') or []
+        
+        loop = asyncio.get_event_loop()
+        tokens = await loop.run_in_executor(None, refresh_tokens_sync)
+        
+        await msg.edit_text(f"✅ **تم تحديث التوكنات بنجاح!**\n🔑 **عدد التوكنات:** {len(tokens)}")
+    except Exception as e:
+        await msg.edit_text(f"❌ **فشل في تحديث التوكنات:** {str(e)}")
+
+async def status_command(update: Update, context: CallbackContext) -> None:
+    """عرض حالة البوت"""
+    tokens = cache.get('responses') or []
+    auto_like_ids = load_json_file(AUTO_LIKE_IDS_FILE, [])
+    liked_ids = load_json_file(LIKED_IDS_FILE, {})
+    
+    status_text = (
+        "🤖 **حالة البوت:** ✅ يعمل\n\n"
+        f"🔑 **التوكنات المخزنة:** {len(tokens)}\n"
+        f"👥 **الحسابات المضمنة:** {len(ACCOUNTS)}\n"
+        f"🔄 **اللايكات التلقائية:** {len(auto_like_ids)} ID\n"
+        f"📊 **الـ IDs المخزنة:** {len(liked_ids)}\n"
+        f"⏰ **تحديث تلقائي:** كل 7 ساعات\n"
+        f"⏰ **لايكات تلقائية:** كل 24 ساعة\n\n"
+        "استخدم /start لرؤية جميع الأوامر"
+    )
+    await update.message.reply_text(status_text)
+
+async def mylikes_command(update: Update, context: CallbackContext) -> None:
+    """عرض الـ IDs المضافة لللايكات التلقائية"""
+    auto_like_ids = load_json_file(AUTO_LIKE_IDS_FILE, [])
+    
+    if not auto_like_ids:
+        await update.message.reply_text("❌ لا توجد أي IDs مضافة لللايكات التلقائية")
+        return
+    
+    ids_text = "📋 **قائمة الـ IDs لللايكات التلقائية:**\n\n"
+    for i, uid in enumerate(auto_like_ids, 1):
+        can_send, message = can_send_likes(uid)
+        status = "✅ جاهز" if can_send else f"⏳ {message}"
+        ids_text += f"{i}. `{uid}` - {status}\n"
+    
+    ids_text += f"\n🗑️ **لإزالة استخدم:** /remove [UID]"
+    await update.message.reply_text(ids_text, parse_mode='Markdown')
+
+async def remove_command(update: Update, context: CallbackContext) -> None:
+    """إزالة ID من اللايكات التلقائية"""
+    if not context.args:
+        await update.message.reply_text("❌ يرجى تقديم UID\nمثال: `/remove 10405791946`", parse_mode='Markdown')
+        return
+
+    uid = context.args[0]
+    
+    if remove_auto_like_id(uid):
+        await update.message.reply_text(f"✅ **تم إزالة الـ ID {uid} من اللايكات التلقائية**")
+    else:
+        await update.message.reply_text(f"❌ الـ ID {uid} غير موجود في قائمة اللايكات التلقائية")
+
+# ========== FastAPI Routes ==========
+
+@fastapi_app.get("/")
+async def root():
+    return {"greeting": "Hello, World!", "message": "Welcome to FastAPI!"}
+
+@fastapi_app.get("/fastapi/tokens")
+async def get_fastapi_tokens():
+    """الحصول على التوكنات المخزنة عبر FastAPI"""
+    tokens = cache.get('responses')
+    if tokens is None:
+        raise HTTPException(status_code=404, detail="No tokens available")
+    return {"tokens": tokens, "count": len(tokens)}
+
+@fastapi_app.get("/fastapi/like")
+async def fastapi_like_handler(uid: str):
+    """إرسال لايكات عبر FastAPI"""
+    if not uid:
+        raise HTTPException(status_code=400, detail="Missing UID parameter")
+    
+    try:
+        print(f"Starting like process for UID: {uid} via FastAPI")
+
+        tokens = cache.get('responses')
+        if not tokens:
+            raise HTTPException(status_code=401, detail="No valid tokens available")
+
+        print(f"Using {len(tokens)} valid tokens")
+
+        enc_uid = encrypt_message_like(create_uid_proto(uid))
+        before = make_like_request(enc_uid, tokens[0]["token"])
+        if not before:
+            raise HTTPException(status_code=500, detail="Failed to retrieve player info")
+
+        before_data = json.loads(MessageToJson(before))
+        likes_before = int(before_data.get("AccountInfo", {}).get("Likes", 0))
+        nickname = before_data.get("AccountInfo", {}).get("PlayerNickname", "Unknown")
+        player_level = before_data.get("AccountInfo", {}).get("Level", 0)
+        region = before_data.get("AccountInfo", {}).get("region", "Unknown")
+
+        print(f"Before: {likes_before} likes for {nickname}")
+
+        print("Sending likes...")
+        responses = await send_likes(uid, tokens)
+        success_count = sum(1 for r in responses if r.get("success"))
+
+        print(f"Successfully sent {success_count} likes")
+
+        after = make_like_request(enc_uid, tokens[0]["token"])
+        likes_after = likes_before
+        if after:
+            after_data = json.loads(MessageToJson(after))
+            likes_after = int(after_data.get("AccountInfo", {}).get("Likes", 0))
+
+        actual_likes_added = likes_after - likes_before
+
+        return {
+            "PlayerNickname": nickname,
+            "UID": uid,
+            "Region": region,
+            "PlayerLevel": player_level,
+            "LikesBefore": likes_before,
+            "LikesAfter": likes_after,
+            "LikesGivenByAPI": actual_likes_added,
+            "SuccessfulRequests": success_count,
+            "TotalAccountsUsed": len(tokens),
+            "status": 1 if actual_likes_added > 0 else 2
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in fastapi_like_handler: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@fastapi_app.post("/fastapi/refresh_tokens")
+async def fastapi_refresh_tokens():
+    """تحديث التوكنات عبر FastAPI"""
+    try:
+        fetch_tokens()
+        tokens = cache.get('responses') or []
+        return {
+            "message": "Tokens refreshed successfully",
+            "total_tokens": len(tokens)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@fastapi_app.get("/fastapi/status")
+async def fastapi_status():
+    """عرض حالة البوت عبر FastAPI"""
+    tokens = cache.get('responses') or []
+    auto_like_ids = load_json_file(AUTO_LIKE_IDS_FILE, [])
+    liked_ids = load_json_file(LIKED_IDS_FILE, {})
+    
+    return {
+        "status": "online",
+        "bot_status": "✅ يعمل",
+        "cached_tokens": len(tokens),
+        "embedded_accounts": len(ACCOUNTS),
+        "auto_like_ids": len(auto_like_ids),
+        "stored_ids": len(liked_ids),
+        "auto_refresh": "كل 7 ساعات",
+        "auto_likes": "كل 24 ساعة"
+    }
+
+# ========== وظائف Flask الأصلية (محفوظة بدون تعديل) ==========
 
 @app.route('/token', methods=['GET'])
 def get_responses():
@@ -884,28 +973,103 @@ def home():
         "endpoints": {
             "/like?uid=UID": "Send likes to player",
             "/token": "Get cached tokens",
-            "/refresh_tokens": "Refresh tokens (POST)"
+            "/refresh_tokens": "Refresh tokens (POST)",
+            "/fastapi/docs": "FastAPI Documentation"
         }
     })
 
 
 def run_scheduler():
+    """تشغيل السكيدولر في loop منفصل"""
     while True:
         schedule.run_pending()
         time.sleep(1)
 
 
-if __name__ == "__main__":
-    # جدولة المهمة كل 7 ساعات
+def run_flask():
+    """تشغيل تطبيق Flask في thread منفصل"""
+    app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
+
+
+def run_fastapi():
+    """تشغيل تطبيق FastAPI في thread منفصل"""
+    uvicorn.run(fastapi_app, host="0.0.0.0", port=8000, log_level="info")
+
+
+def run_telegram_bot():
+    """تشغيل بوت تيليجرام في thread منفصل"""
+    # إنشاء تطبيق تيليجرام
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+
+    # إضافة handlers
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("like", like_command))
+    application.add_handler(CommandHandler("lik", lik_command))
+    application.add_handler(CommandHandler("like24", like24_command))
+    application.add_handler(CommandHandler("upload", upload_command))
+    application.add_handler(CommandHandler("tokens", tokens_command))
+    application.add_handler(CommandHandler("refresh", refresh_command))
+    application.add_handler(CommandHandler("status", status_command))
+    application.add_handler(CommandHandler("mylikes", mylikes_command))
+    application.add_handler(CommandHandler("remove", remove_command))
+    
+    # إضافة handler للملفات
+    from telegram.ext import MessageHandler, filters
+    application.add_handler(MessageHandler(filters.Document.ALL, handle_document))
+
+    # بدء البوت
+    print("🤖 بوت تيليجرام يعمل...")
+    application.run_polling()
+
+
+def main():
+    """الدالة الرئيسية لتشغيل كل شيء"""
+    
+    # تشغيل السكيدولر
     schedule.every(7).hours.do(fetch_tokens)
-
-    # تشغيل fetch_tokens فورًا عند بدء التشغيل
-    fetch_tokens()
-
-    # تشغيل السكيدولر في ثانوية منفصلة
+    schedule.every(24).hours.do(send_auto_likes)
     scheduler_thread = threading.Thread(target=run_scheduler)
     scheduler_thread.daemon = True
     scheduler_thread.start()
 
-    # تشغيل تطبيق Flask
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # تشغيل fetch_tokens فوراً
+    print("🔄 جاري تحميل التوكنات الأولية...")
+    fetch_tokens()
+
+    # تشغيل Flask في thread منفصل
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    # تشغيل FastAPI في thread منفصل
+    fastapi_thread = threading.Thread(target=run_fastapi)
+    fastapi_thread.daemon = True
+    fastapi_thread.start()
+
+    # تشغيل Telegram Bot في thread منفصل
+    telegram_thread = threading.Thread(target=run_telegram_bot)
+    telegram_thread.daemon = True
+    telegram_thread.start()
+
+    print("🚀 جميع الخدمات تعمل:")
+    print("   • Flask API: http://0.0.0.0:5000")
+    print("   • FastAPI: http://0.0.0.0:8000")
+    print("   • FastAPI Docs: http://0.0.0.0:8000/docs")
+    print("   • Telegram Bot: يعمل")
+
+    # البقاء في التشغيل
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("🛑 إيقاف البوت...")
+
+
+if __name__ == "__main__":
+    # تأكد من وضع توكن البوت هنا
+    if TELEGRAM_BOT_TOKEN == "YOUR_TELEGRAM_BOT_TOKEN_HERE":
+        print("❌ يرجى تعيين TELEGRAM_BOT_TOKEN الصحيح في الكود")
+        exit(1)
+    
+    # تشغيل البوت
+    main()
