@@ -22,41 +22,506 @@ import like_pb2, like_count_pb2, uid_generator_pb2
 from google.protobuf.message import DecodeError
 import urllib3
 
-# Ignore SSL certificate warnings
+# تجاهل تحذيرات SSL
 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 AES_KEY = b'Yg&tc%DEuh6%Zc^8'
 AES_IV = b'6oyZDr22E3ychjM%'
 
-# Initialize colorama
+# تهيئة colorama
 init(autoreset=True)
 
-# Initialize Flask app
+# تهيئة تطبيق Flask
 app = Flask(__name__)
 
-# Configure Flask-Caching
-cache = Cache(app,
-              config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 25200})  # 7 ساعات بالثواني (7 * 60 * 60)
+# تكوين Flask-Caching
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 25200})
+
+# ✅ الحسابات مخزنة مباشرة في الكود
+ACCOUNTS = [
+    {
+        "uid": "4238482847",
+        "password": "BY_PARAHEX-RCTN0RQ6G-REDZED"
+    },
+    {
+        "uid": "4238483641",
+        "password": "BY_PARAHEX-OQ9OPWFYV-REDZED"
+    },
+    {
+        "uid": "4238483930",
+        "password": "BY_PARAHEX-ZDG5RAWIR-REDZED"
+    },
+    {
+        "uid": "4238484353",
+        "password": "BY_PARAHEX-9GU9UIE73-REDZED"
+    },
+    {
+        "uid": "4238484937",
+        "password": "BY_PARAHEX-JH7FIUHZ5-REDZED"
+    },
+    {
+        "uid": "4238485421",
+        "password": "BY_PARAHEX-PS7OSYGGA-REDZED"
+    },
+    {
+        "uid": "4238486594",
+        "password": "BY_PARAHEX-GFDCVWE2E-REDZED"
+    },
+    {
+        "uid": "4238487850",
+        "password": "BY_PARAHEX-LV7DZJC8B-REDZED"
+    },
+    {
+        "uid": "4238488258",
+        "password": "BY_PARAHEX-WM4LU305T-REDZED"
+    },
+    {
+        "uid": "4238488913",
+        "password": "BY_PARAHEX-R00SAMFHW-REDZED"
+    },
+    {
+        "uid": "4238489569",
+        "password": "BY_PARAHEX-BXGJCV8UT-REDZED"
+    },
+    {
+        "uid": "4238490146",
+        "password": "BY_PARAHEX-DFHJRTF8C-REDZED"
+    },
+    {
+        "uid": "4238490678",
+        "password": "BY_PARAHEX-FECEORP5R-REDZED"
+    },
+    {
+        "uid": "4238491318",
+        "password": "BY_PARAHEX-5DSCHF4NP-REDZED"
+    },
+    {
+        "uid": "4238491969",
+        "password": "BY_PARAHEX-41JV5JMFC-REDZED"
+    },
+    {
+        "uid": "4238492514",
+        "password": "BY_PARAHEX-W67ZMEE6U-REDZED"
+    },
+    {
+        "uid": "4238493184",
+        "password": "BY_PARAHEX-PXMQ5TBNC-REDZED"
+    },
+    {
+        "uid": "4238493653",
+        "password": "BY_PARAHEX-R7UZJXDGO-REDZED"
+    },
+    {
+        "uid": "4238494245",
+        "password": "BY_PARAHEX-HHAFWMXP3-REDZED"
+    },
+    {
+        "uid": "4238494827",
+        "password": "BY_PARAHEX-Y7KVTZ5RT-REDZED"
+    },
+    {
+        "uid": "4238495427",
+        "password": "BY_PARAHEX-6YAYM6ULU-REDZED"
+    },
+    {
+        "uid": "4238495867",
+        "password": "BY_PARAHEX-NJSP40UGZ-REDZED"
+    },
+    {
+        "uid": "4238496398",
+        "password": "BY_PARAHEX-KK7CPDGLT-REDZED"
+    },
+    {
+        "uid": "4238497001",
+        "password": "BY_PARAHEX-8QO0IS2KN-REDZED"
+    },
+    {
+        "uid": "4238497630",
+        "password": "BY_PARAHEX-PLYUTIN7S-REDZED"
+    },
+    {
+        "uid": "4238498243",
+        "password": "BY_PARAHEX-ALEWMHXVG-REDZED"
+    },
+    {
+        "uid": "4238498684",
+        "password": "BY_PARAHEX-DN0WIAVVU-REDZED"
+    },
+    {
+        "uid": "4238499310",
+        "password": "BY_PARAHEX-NQQZM2QKD-REDZED"
+    },
+    {
+        "uid": "4238499839",
+        "password": "BY_PARAHEX-AUES26TUK-REDZED"
+    },
+    {
+        "uid": "4238500354",
+        "password": "BY_PARAHEX-8XVQQUU5X-REDZED"
+    },
+    {
+        "uid": "4238500872",
+        "password": "BY_PARAHEX-MFKAHHBGL-REDZED"
+    },
+    {
+        "uid": "4238501366",
+        "password": "BY_PARAHEX-P5ECLO087-REDZED"
+    },
+    {
+        "uid": "4238502287",
+        "password": "BY_PARAHEX-KDJ9V0ZHC-REDZED"
+    },
+    {
+        "uid": "4238502700",
+        "password": "BY_PARAHEX-YNWAVYIML-REDZED"
+    },
+    {
+        "uid": "4238503351",
+        "password": "BY_PARAHEX-DFJ3UKDKD-REDZED"
+    },
+    {
+        "uid": "4238503965",
+        "password": "BY_PARAHEX-3NTBFMCPO-REDZED"
+    },
+    {
+        "uid": "4238504468",
+        "password": "BY_PARAHEX-PBUBZF9KV-REDZED"
+    },
+    {
+        "uid": "4238505408",
+        "password": "BY_PARAHEX-5YZSBUD5V-REDZED"
+    },
+    {
+        "uid": "4238506061",
+        "password": "BY_PARAHEX-NE7HPRZJY-REDZED"
+    },
+    {
+        "uid": "4238507104",
+        "password": "BY_PARAHEX-VMUID1IOL-REDZED"
+    },
+    {
+        "uid": "4238507485",
+        "password": "BY_PARAHEX-AQEXCSFCV-REDZED"
+    },
+    {
+        "uid": "4238507854",
+        "password": "BY_PARAHEX-JF4CTEXV7-REDZED"
+    },
+    {
+        "uid": "4238508378",
+        "password": "BY_PARAHEX-7H8IX0ISP-REDZED"
+    },
+    {
+        "uid": "4238509230",
+        "password": "BY_PARAHEX-EZN9RFLJS-REDZED"
+    },
+    {
+        "uid": "4238509632",
+        "password": "BY_PARAHEX-RCEOFUDJK-REDZED"
+    },
+    {
+        "uid": "4238510706",
+        "password": "BY_PARAHEX-7SYKHLEBJ-REDZED"
+    },
+    {
+        "uid": "4238511102",
+        "password": "BY_PARAHEX-JZZ44ZTXH-REDZED"
+    },
+    {
+        "uid": "4238511876",
+        "password": "BY_PARAHEX-VZVOVJG63-REDZED"
+    },
+    {
+        "uid": "4238512340",
+        "password": "BY_PARAHEX-TGFANPWST-REDZED"
+    },
+    {
+        "uid": "4238512899",
+        "password": "BY_PARAHEX-Z99QSJYRJ-REDZED"
+    },
+    {
+        "uid": "4238513158",
+        "password": "BY_PARAHEX-56ABQONU3-REDZED"
+    },
+    {
+        "uid": "4238513754",
+        "password": "BY_PARAHEX-IKP9FG3YZ-REDZED"
+    },
+    {
+        "uid": "4238514292",
+        "password": "BY_PARAHEX-LKZYNPRPK-REDZED"
+    },
+    {
+        "uid": "4238514880",
+        "password": "BY_PARAHEX-7PCRCA1KI-REDZED"
+    },
+    {
+        "uid": "4238515552",
+        "password": "BY_PARAHEX-AJMRU2KAU-REDZED"
+    },
+    {
+        "uid": "4238515816",
+        "password": "BY_PARAHEX-RGS7MM5R8-REDZED"
+    },
+    {
+        "uid": "4238516592",
+        "password": "BY_PARAHEX-ZNVDOB1CA-REDZED"
+    },
+    {
+        "uid": "4238517090",
+        "password": "BY_PARAHEX-Z73K3WSRY-REDZED"
+    },
+    {
+        "uid": "4238517588",
+        "password": "BY_PARAHEX-RFSJHAOCB-REDZED"
+    },
+    {
+        "uid": "4238518085",
+        "password": "BY_PARAHEX-EALVJNY8W-REDZED"
+    },
+    {
+        "uid": "4238518695",
+        "password": "BY_PARAHEX-5HWUUQ0BR-REDZED"
+    },
+    {
+        "uid": "4238519121",
+        "password": "BY_PARAHEX-UKXDBY2QN-REDZED"
+    },
+    {
+        "uid": "4238519799",
+        "password": "BY_PARAHEX-AGXRLILDS-REDZED"
+    },
+    {
+        "uid": "4238520162",
+        "password": "BY_PARAHEX-969HXKOLO-REDZED"
+    },
+    {
+        "uid": "4238521031",
+        "password": "BY_PARAHEX-RDYAJSYXZ-REDZED"
+    },
+    {
+        "uid": "4238521597",
+        "password": "BY_PARAHEX-HA0FJUGFX-REDZED"
+    },
+    {
+        "uid": "4238522353",
+        "password": "BY_PARAHEX-VLSLAYJK0-REDZED"
+    },
+    {
+        "uid": "4238522929",
+        "password": "BY_PARAHEX-JVWVIRYS4-REDZED"
+    },
+    {
+        "uid": "4238523207",
+        "password": "BY_PARAHEX-BIQYNPYI7-REDZED"
+    },
+    {
+        "uid": "4238523536",
+        "password": "BY_PARAHEX-X9AEZO0FX-REDZED"
+    },
+    {
+        "uid": "4238524036",
+        "password": "BY_PARAHEX-5EBTVYPIK-REDZED"
+    },
+    {
+        "uid": "4238524347",
+        "password": "BY_PARAHEX-H9XA5ZC8M-REDZED"
+    },
+    {
+        "uid": "4238524780",
+        "password": "BY_PARAHEX-RI6NTPKX9-REDZED"
+    },
+    {
+        "uid": "4238525287",
+        "password": "BY_PARAHEX-3IX1ASH2O-REDZED"
+    },
+    {
+        "uid": "4238525858",
+        "password": "BY_PARAHEX-DABQNDQDZ-REDZED"
+    },
+    {
+        "uid": "4238526194",
+        "password": "BY_PARAHEX-WQCBNKANQ-REDZED"
+    },
+    {
+        "uid": "4238526522",
+        "password": "BY_PARAHEX-AGNNPWOCA-REDZED"
+    },
+    {
+        "uid": "4238526911",
+        "password": "BY_PARAHEX-SXRJJMTCQ-REDZED"
+    },
+    {
+        "uid": "4238527541",
+        "password": "BY_PARAHEX-OOK3XQLPP-REDZED"
+    },
+    {
+        "uid": "4238528065",
+        "password": "BY_PARAHEX-Q6B2SDGMH-REDZED"
+    },
+    {
+        "uid": "4238528377",
+        "password": "BY_PARAHEX-EFY30GMVZ-REDZED"
+    },
+    {
+        "uid": "4238528931",
+        "password": "BY_PARAHEX-SJRV7E778-REDZED"
+    },
+    {
+        "uid": "4238529421",
+        "password": "BY_PARAHEX-ARBRXMRK8-REDZED"
+    },
+    {
+        "uid": "4238529883",
+        "password": "BY_PARAHEX-JHMPO1YKW-REDZED"
+    },
+    {
+        "uid": "4238530356",
+        "password": "BY_PARAHEX-O8875VCMY-REDZED"
+    },
+    {
+        "uid": "4238530940",
+        "password": "BY_PARAHEX-ESVRTU3SL-REDZED"
+    },
+    {
+        "uid": "4238531522",
+        "password": "BY_PARAHEX-OWK05EU35-REDZED"
+    },
+    {
+        "uid": "4238532200",
+        "password": "BY_PARAHEX-XLEQY6ZM4-REDZED"
+    },
+    {
+        "uid": "4238533234",
+        "password": "BY_PARAHEX-1ABHZO59N-REDZED"
+    },
+    {
+        "uid": "4238533822",
+        "password": "BY_PARAHEX-SHHL980X4-REDZED"
+    },
+    {
+        "uid": "4238534333",
+        "password": "BY_PARAHEX-DO5BQG0ST-REDZED"
+    },
+    {
+        "uid": "4238534939",
+        "password": "BY_PARAHEX-KPLFHUPB7-REDZED"
+    },
+    {
+        "uid": "4238535543",
+        "password": "BY_PARAHEX-JIQPHM7LV-REDZED"
+    },
+    {
+        "uid": "4238536282",
+        "password": "BY_PARAHEX-GFVVL2QO1-REDZED"
+    },
+    {
+        "uid": "4238536913",
+        "password": "BY_PARAHEX-ZMJULIMOC-REDZED"
+    },
+    {
+        "uid": "4238537410",
+        "password": "BY_PARAHEX-74DCFWNZP-REDZED"
+    },
+    {
+        "uid": "4238537860",
+        "password": "BY_PARAHEX-1AC0TTHJW-REDZED"
+    },
+    {
+        "uid": "4238538902",
+        "password": "BY_PARAHEX-DQQDNQCSW-REDZED"
+    },
+    {
+        "uid": "4238539393",
+        "password": "BY_PARAHEX-NPGGDOJ7L-REDZED"
+    },
+    {
+        "uid": "4238539726",
+        "password": "BY_PARAHEX-PRGPQYODS-REDZED"
+    },
+    {
+        "uid": "4238540363",
+        "password": "BY_PARAHEX-0NGWEXBCR-REDZED"
+    },
+    {
+        "uid": "4238540973",
+        "password": "BY_PARAHEX-F3PTMOI2W-REDZED"
+    },
+    {
+        "uid": "4238541992",
+        "password": "BY_PARAHEX-LRGGDFC3M-REDZED"
+    },
+    {
+        "uid": "4238542462",
+        "password": "BY_PARAHEX-YM3NWGGIL-REDZED"
+    },
+    {
+        "uid": "4238542943",
+        "password": "BY_PARAHEX-T5TLCWPT5-REDZED"
+    },
+    {
+        "uid": "4238543641",
+        "password": "BY_PARAHEX-3AJXAAE7H-REDZED"
+    },
+    {
+        "uid": "4238544469",
+        "password": "BY_PARAHEX-VUY2N0ENS-REDZED"
+    },
+    {
+        "uid": "4238544837",
+        "password": "BY_PARAHEX-SZAAUBUET-REDZED"
+    },
+    {
+        "uid": "4238545225",
+        "password": "BY_PARAHEX-XPJW0BYKY-REDZED"
+    },
+    {
+        "uid": "4238545755",
+        "password": "BY_PARAHEX-YHXTIPJ5O-REDZED"
+    },
+    {
+        "uid": "4238546094",
+        "password": "BY_PARAHEX-K7DAWRXXR-REDZED"
+    },
+    {
+        "uid": "4238546700",
+        "password": "BY_PARAHEX-IYHTWWBI6-REDZED"
+    },
+    {
+        "uid": "4238547052",
+        "password": "BY_PARAHEX-TL8RQ9X0R-REDZED"
+    },
+    {
+        "uid": "4238547385",
+        "password": "BY_PARAHEX-9B5CB5EL6-REDZED"
+    },
+    {
+        "uid": "4238547738",
+        "password": "BY_PARAHEX-Y0T28RF9D-REDZED"
+    }
+]
 
 
-# ✅ تحميل الحسابات من ملف accounts.json
+# ✅ دالة تحميل الحسابات من المتغير الثابت
 def load_accounts():
-    try:
-        with open('accounts.json', 'r', encoding='utf-8') as file:
-            data = json.load(file)
-            if isinstance(data, list):
-                # تحويل من قائمة إلى قاموس
-                accounts_dict = {}
-                for account in data:
-                    if isinstance(account, dict) and 'uid' in account and 'password' in account:
-                        accounts_dict[account['uid']] = account['password']
-                return accounts_dict
-            elif isinstance(data, dict):
-                return data
-    except Exception as e:
-        print(f"Error loading accounts from accounts.json: {e}")
-        return {}
+    accounts_dict = {}
+    for account in ACCOUNTS:
+        accounts_dict[account["uid"]] = account["password"]
+    print(f"Loaded {len(accounts_dict)} accounts from embedded accounts")
+    return accounts_dict
+
+
+# ✅ دالة تحميل التوكنات (لا تعتمد على ملفات)
+def load_tokens_from_accounts(limit=None):
+    accounts = load_accounts()
+    tokens_list = [(uid, password) for uid, password in accounts.items()]
+
+    if limit is not None:
+        tokens_list = random.sample(tokens_list, min(limit, len(tokens_list)))
+
+    print(f"Loaded {len(tokens_list)} tokens from embedded accounts")
+    return tokens_list
 
 
 def get_token(password, uid):
@@ -89,21 +554,7 @@ def encrypt_message(key, iv, plaintext):
     return encrypted_message
 
 
-def load_tokens(file_path, limit=None):
-    try:
-        with open(file_path, 'r') as file:
-            tokens = [line.strip().split(':') for line in file if ':' in line]
-            if limit is not None:
-                tokens = random.sample(tokens, min(limit, len(tokens)))  # اختيار التوكنات بشكل عشوائي
-            print(f"Loaded {len(tokens)} tokens from {file_path}")  # Debug message
-            return tokens
-    except Exception as e:
-        print(f"Error loading tokens from {file_path}: {e}")  # Debug message
-        return []
-
-
 def parse_response(response_content):
-    # تحليل الـ response لاستخراج الحقول المهمة
     response_dict = {}
     lines = response_content.split("\n")
     for line in lines:
@@ -114,10 +565,10 @@ def parse_response(response_content):
 
 
 def process_token(uid, password):
-    print(f"Processing token for UID: {uid}")  # Debug message
+    print(f"Processing token for UID: {uid}")
     token_data = get_token(password, uid)
     if not token_data:
-        print(f"Failed to retrieve token for UID: {uid}")  # Debug message
+        print(f"Failed to retrieve token for UID: {uid}")
         return {"uid": uid, "error": "Failed to retrieve token"}
 
     # إنشاء GameData Protobuf
@@ -206,51 +657,45 @@ def process_token(uid, password):
                 example_msg.ParseFromString(response.content)
                 # تحليل الـ response لاستخراج الحقول المهمة
                 response_dict = parse_response(str(example_msg))
-                print(f"Successfully processed token for UID: {uid}")  # Debug message
+                print(f"Successfully processed token for UID: {uid}")
                 return {"uid": uid, "token": response_dict.get("token", "N/A")}
             except Exception as e:
-                print(f"Failed to deserialize the response for UID: {uid}: {e}")  # Debug message
+                print(f"Failed to deserialize the response for UID: {uid}: {e}")
                 return None
         else:
-            print(
-                f"Failed to get response for UID: {uid}: HTTP {response.status_code}, {response.reason}")  # Debug message
+            print(f"Failed to get response for UID: {uid}: HTTP {response.status_code}, {response.reason}")
             return None
     except requests.RequestException as e:
-        print(f"An error occurred while making the request for UID: {uid}: {e}")  # Debug message
+        print(f"An error occurred while making the request for UID: {uid}: {e}")
         return None
 
 
 def fetch_tokens():
     with app.app_context():
-        # محاولة تحميل التوكنات من ملف acc.txt أولاً
-        tokens_from_file = load_tokens("acc.txt", limit=100)
+        # تحميل التوكنات من الحسابات المضمنة في الكود
+        tokens_from_accounts = load_tokens_from_accounts(limit=100)
 
-        # إذا لم يوجد ملف acc.txt، استخدم accounts.json
-        if not tokens_from_file:
-            accounts = load_accounts()
-            if accounts:
-                tokens_from_file = [(uid, password) for uid, password in accounts.items()]
-                print(f"Loaded {len(tokens_from_file)} tokens from accounts.json")
-            else:
-                print("No tokens loaded from either acc.txt or accounts.json")
-                return
+        if not tokens_from_accounts:
+            print("No accounts found in embedded accounts")
+            return
 
         responses = []
 
         # استخدام ThreadPoolExecutor لتنفيذ المهام بشكل متوازي
         with ThreadPoolExecutor(max_workers=15) as executor:
-            future_to_uid = {executor.submit(process_token, uid, password): uid for uid, password in tokens_from_file}
+            future_to_uid = {executor.submit(process_token, uid, password): uid for uid, password in
+                             tokens_from_accounts}
             for future in as_completed(future_to_uid):
                 try:
                     token_info = future.result()
-                    if token_info and token_info.get("token") and token_info["token"] != "N/A":  # إذا كان التوكن صالحًا
+                    if token_info and token_info.get("token") and token_info["token"] != "N/A":
                         responses.append(token_info)
                 except Exception as e:
-                    print(f"Error processing token: {e}")  # Debug message
+                    print(f"Error processing token: {e}")
 
         # تخزين النتائج في الكاش
         cache.set('responses', responses)
-        print(f"Stored {len(responses)} tokens in cache.")  # Debug message
+        print(f"Stored {len(responses)} tokens in cache.")
 
 
 # ✅ الدوال الخاصة باللايكات
@@ -348,15 +793,13 @@ async def send_likes(uid, tokens):
 
 @app.route('/token', methods=['GET'])
 def get_responses():
-    # الحصول على النتائج من الكاش
     responses = cache.get('responses')
     if responses is None:
-        print("No data available in cache.")  # Debug message
+        print("No data available in cache.")
         return jsonify({"error": "No data available yet"})
-    return jsonify({"tokens": responses})  # إرجاع التوكنات في قائمة
+    return jsonify({"tokens": responses})
 
 
-# ✅ نقطة النهاية لإرسال اللايكات
 @app.route('/like', methods=['GET'])
 def like_handler():
     uid = request.args.get("uid")
@@ -366,14 +809,12 @@ def like_handler():
     try:
         print(f"Starting like process for UID: {uid}")
 
-        # جلب التوكنات من الكاش
         tokens = cache.get('responses')
         if not tokens:
             return jsonify({"error": "No valid tokens available. Please refresh tokens first."}), 401
 
         print(f"Using {len(tokens)} valid tokens")
 
-        # الحصول على البيانات قبل الإرسال
         enc_uid = encrypt_message_like(create_uid_proto(uid))
         before = make_like_request(enc_uid, tokens[0]["token"])
         if not before:
@@ -387,14 +828,12 @@ def like_handler():
 
         print(f"Before: {likes_before} likes for {nickname}")
 
-        # إرسال اللايكات
         print("Sending likes...")
         responses = asyncio.run(send_likes(uid, tokens))
         success_count = sum(1 for r in responses if r.get("success"))
 
         print(f"Successfully sent {success_count} likes")
 
-        # الحصول على البيانات بعد الإرسال
         after = make_like_request(enc_uid, tokens[0]["token"])
         likes_after = likes_before
         if after:
@@ -423,7 +862,6 @@ def like_handler():
 
 @app.route('/refresh_tokens', methods=['POST'])
 def refresh_tokens():
-    """تحديث التوكنات يدوياً"""
     try:
         fetch_tokens()
         tokens = cache.get('responses') or []
@@ -442,6 +880,7 @@ def home():
         "status": "online",
         "message": "Like API is running ✅",
         "cached_tokens": len(tokens),
+        "embedded_accounts": len(ACCOUNTS),
         "endpoints": {
             "/like?uid=UID": "Send likes to player",
             "/token": "Get cached tokens",
