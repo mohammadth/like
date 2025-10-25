@@ -1,0 +1,12 @@
+Flask
+requests
+aiohttp
+googleapis-common-protos
+pycryptodome
+protobuf
+Werkzeug
+flask-caching
+colorama
+schedule
+urllib3
+python-telegram-bot
