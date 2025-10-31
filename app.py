@@ -4129,10 +4129,10 @@ def process_token(uid, password):
         'Connection': "Keep-Alive",
         'Accept-Encoding': "gzip",
         'Content-Type': "application/octet-stream",
-        'Expect': "100-continue",
+        'Expect': "500-continue",
         'X-Unity-Version': "2018.4.11f1",
         'X-GA': "v1 1",
-        'ReleaseVersion': "OB50"
+        'ReleaseVersion': "OB51"
     }
     edata = bytes.fromhex(hex_encrypted_data)
 
@@ -4222,10 +4222,10 @@ def make_like_request(enc_uid, token):
         'Accept-Encoding': "gzip",
         'Authorization': f"Bearer {token}",
         'Content-Type': "application/x-www-form-urlencoded",
-        'Expect': "100-continue",
+        'Expect': "500-continue",
         'X-Unity-Version': "2018.4.11f1",
         'X-GA': "v1 1",
-        'ReleaseVersion': "OB50"
+        'ReleaseVersion': "OB51"
     }
     try:
         res = requests.post(url, data=bytes.fromhex(enc_uid), headers=headers, verify=False, timeout=30)
@@ -4244,10 +4244,10 @@ async def send_like_request(enc_uid, token_info):
         'Accept-Encoding': "gzip",
         'Authorization': f"Bearer {token_info['token']}",
         'Content-Type': "application/x-www-form-urlencoded",
-        'Expect': "100-continue",
+        'Expect': "500-continue",
         'X-Unity-Version': "2018.4.11f1",
         'X-GA': "v1 1",
-        'ReleaseVersion': "OB50"
+        'ReleaseVersion': "OB51"
     }
     try:
         async with aiohttp.ClientSession() as session:
@@ -4393,5 +4393,6 @@ scheduler_thread.start()
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=5000)
+
 
 
